@@ -1,5 +1,5 @@
 # Deploy on simpson, through the self-hosted runner there (same as Overspray).
-# Every push to main updates the test copy, tools.niftyfi.sh/_lab/iracing.
+# Every push to main updates the test copy, tools.niftyfi.sh/_lab/iracing-tools.
 # The live site only updates when Zac presses Run workflow (Actions > Deploy).
 # No pull_request trigger on purpose: PRs never run on the server.
 name: Deploy
@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Pull main
         env:
-          DIR: ${{ github.event_name == 'workflow_dispatch' && '/sites/iracing' || '/sites/_lab/iracing' }}
+          DIR: ${{ github.event_name == 'workflow_dispatch' && '/sites/iracing-tools' || '/sites/_lab/iracing-tools' }}
         run: |
           git -c safe.directory="$DIR" -C "$DIR" pull --ff-only
           # the runner is root in its container; give the files back to the folder's owner

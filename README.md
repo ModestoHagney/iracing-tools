@@ -8,4 +8,4 @@ A web page for editing iRacing track camera sets (`Documents\iRacing\cameras\tra
 
 Every save backs up the old file to `cameras\_backup_web\<time>\` first. Close iRacing before saving.
 
-Deploys like Overspray: push to main updates tools.niftyfi.sh/_lab/iracing; Run workflow (Actions > Deploy) updates the live copy.
+Deploys like Overspray: push to main updates tools.niftyfi.sh/_lab/iracing-tools; Run workflow (Actions > Deploy) updates the live copy.
