@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iRacing cameras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try { const t = localStorage.getItem('iracing-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+<style>
+:root {
+  --bar: #ffffff; --panel: #ffffff; --stage: #e4e7ec; --line: #d5d9e0;
+  --fg: #1c2128; --muted: #5d6673; --hover: #eef1f5;
+  --accent: #1f5fe0; --accent-fg: #ffffff; --accent-soft: #e3ecff;
+  --live: #16885a; --bad: #c0362c; --shade: rgba(20, 30, 50, .2);
+  --ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bar: #24272d; --panel: #2b2f36; --stage: #3b4049; --line: #454a54;
+    --fg: #eef0f3; --muted: #a9b1bd; --hover: #373c45;
+    --accent: #7aa5ff; --accent-fg: #0d1830; --accent-soft: #2e3d60;
+    --live: #4fd18e; --bad: #ff8a7d; --shade: rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bar: #24272d; --panel: #2b2f36; --stage: #3b4049; --line: #454a54;
+  --fg: #eef0f3; --muted: #a9b1bd; --hover: #373c45;
+  --accent: #7aa5ff; --accent-fg: #0d1830; --accent-soft: #2e3d60;
+  --live: #4fd18e; --bad: #ff8a7d; --shade: rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font: 13px/1.35 var(--ui); background: var(--stage); color: var(--fg); display: grid; grid-template-rows: auto 1fr; }
+header { display: flex; align-items: center; gap: 4px 14px; padding: 6px 14px; background: var(--bar); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 13px; font-weight: 600; margin: 0; }
+header .spacer { flex: 1; }
+header .btn { width: auto; }
+main { display: grid; grid-template-columns: repeat(3, 268px); gap: 10px; padding: 12px; align-items: start; overflow: auto; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 4px 14px var(--shade); overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 70px); }
+.card > h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0; padding: 10px 12px 6px; }
+.body { padding: 4px 8px 10px; overflow: auto; }
+.list { display: flex; flex-direction: column; gap: 2px; }
+.row { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.row:hover { background: var(--hover); }
+.row.on { background: var(--accent-soft); }
+.row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.count { font: 11px var(--mono); color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.row.err .name { color: var(--bad); }
+.field { display: flex; align-items: center; gap: 8px; height: 30px; margin: 4px 6px; padding: 2px 4px 2px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bar); }
+.field:hover { border-color: var(--muted); }
+.field span { color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field input { border: 0; border-radius: 4px; background: var(--panel); color: var(--fg); font: 12px var(--mono); text-align: right; width: 96px; height: 24px; padding: 0 6px; }
+.field input[type=text], .field input[type=search] { font: 13px var(--ui); flex: 1; width: auto; min-width: 0; }
+.field input:focus { outline: 1px solid var(--muted); outline-offset: -1px; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 6px 4px; }
+.btn { height: 30px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bar); color: var(--fg); font: 13px var(--ui); cursor: pointer; white-space: nowrap; min-width: 0; }
+.btn:hover { background: var(--hover); }
+.btn.main { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 500; }
+.btn.main:hover { filter: brightness(1.08); }
+.btn.bad { background: var(--bad); border-color: var(--bad); color: var(--panel); font-weight: 500; }
+.btn:disabled { opacity: .4; pointer-events: none; }
+.btn:focus-visible, .icon:focus-visible, .row:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.icon { width: 30px; height: 30px; border: 0; background: none; color: var(--muted); border-radius: 6px; cursor: pointer; display: grid; place-items: center; }
+.icon:hover { background: var(--hover); color: var(--fg); }
+details { margin-top: 12px; }
+summary { list-style: none; background: var(--line); color: var(--fg); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; padding: 7px 10px; border-radius: 6px; margin: 0 6px 4px; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " ▸"; color: var(--muted); }
+details[open] summary::after { content: " ▾"; }
+.sub { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: 8px 6px 2px; }
+.note { font-size: 12px; color: var(--muted); padding: 4px 6px; }
+.title { font-size: 14px; font-weight: 600; padding: 2px 6px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dim { opacity: .4; pointer-events: none; }
+#toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); padding: 7px 14px; border-radius: 99px; background: var(--fg); color: var(--bar); font-size: 12.5px; box-shadow: 0 8px 24px var(--shade); max-width: calc(100% - 32px); }
+#toast.err { background: var(--bad); color: #fff; }
+#toast[hidden] { display: none; }
+@media (max-width: 860px) { main { grid-template-columns: 1fr; } .card { max-height: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>iRacing cameras</h1>
+  <span class="spacer"></span>
+  <button class="btn" id="open">Open iRacing folder</button>
+  <button class="btn main" id="save" disabled>Save</button>
+  <button class="icon" id="theme" title="Switch light and dark" aria-label="Switch light and dark">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+  </button>
+</header>
+<main>
+  <section class="card">
+    <h2>Tracks</h2>
+    <div class="body">
+      <label class="field"><span>Find</span><input type="search" id="find" autocomplete="off"></label>
+      <div class="list" id="tracks"></div>
+      <p class="note" id="tracksNote">Open your Documents\iRacing folder to start. Only tracks you have saved once in the camera tool (Ctrl+F12) show here.</p>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Groups</h2>
+    <div class="body">
+      <div class="list" id="groups"></div>
+      <p class="note" id="groupsNote">Pick a track.</p>
+      <details id="addFold">
+        <summary>New chase group</summary>
+        <label class="field"><span>Name</span><input type="text" id="nName" maxlength="28"></label>
+        <label class="field"><span>X</span><input type="number" id="nX" step="0.5" value="-20"></label>
+        <label class="field"><span>Y</span><input type="number" id="nY" step="0.5" value="0"></label>
+        <label class="field"><span>Z</span><input type="number" id="nZ" step="0.5" value="5"></label>
+        <label class="field"><span>Yaw</span><input type="number" id="nYaw" step="5" value="0"></label>
+        <p class="note">Metres. X minus is behind the car, Z is height. Yaw in degrees, 180 faces backwards.</p>
+        <div class="btns"><button class="btn main" id="add">Add</button></div>
+      </details>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Camera</h2>
+    <div class="body" id="cam">
+      <p class="note">Pick a group.</p>
+    </div>
+  </section>
+</main>
+<div id="toast" hidden></div>
+
+<script type="module">
+import * as C from './cam.js';
+
+const $ = (s) => document.querySelector(s);
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+const deg = (r) => Math.round(r * 18000 / Math.PI) / 100;
+const rad = (d) => d * Math.PI / 180;
+
+let camsDir = null;          // Documents\iRacing\cameras
+const tracks = new Map();    // path -> { fh, parts, data, mtime, dirty, err }
+let cur = null, curGroup = null, curCam = null;
+
+let toastTimer;
+function toast(msg, err) {
+  const t = $('#toast');
+  t.textContent = msg; t.className = err ? 'err' : ''; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), err ? 6500 : 3200);
+}
+
+// Theme: half-moon flips light and dark, remembered per browser.
+$('#theme').onclick = () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('iracing-theme', r.dataset.theme); } catch {}
+};
+
+// Delete button that turns red and reads Confirm; a click anywhere else stands it down.
+function confirmButton(label, act) {
+  const b = el('button', { className: 'btn', textContent: label });
+  const reset = () => { b.classList.remove('bad'); b.textContent = label; };
+  b.onclick = (e) => {
+    e.stopPropagation();
+    if (b.classList.contains('bad')) { reset(); act(); return; }
+    b.classList.add('bad'); b.textContent = 'Confirm';
+    document.addEventListener('click', reset, { once: true });
+  };
+  return b;
+}
+
+const dirty = () => [...tracks.values()].filter((t) => t.dirty);
+function touch(t) { t.dirty = true; $('#save').disabled = false; }
+addEventListener('beforeunload', (e) => { if (dirty().length) e.preventDefault(); });
+
+if (!window.showDirectoryPicker) {
+  $('#open').disabled = true;
+  $('#tracksNote').textContent = 'This needs Chrome or Edge on a computer, because it opens your iRacing folder directly.';
+}
+
+$('#open').onclick = async () => {
+  if (dirty().length) return toast('Save your changes first', 1);
+  let d;
+  try { d = await showDirectoryPicker({ id: 'iracing', mode: 'readwrite', startIn: 'documents' }); } catch { return; }
+  try {
+    if (d.name.toLowerCase() !== 'cameras') d = await d.getDirectoryHandle('cameras');
+    const tr = await d.getDirectoryHandle('tracks');
+    camsDir = d; tracks.clear(); cur = curGroup = curCam = null;
+    await scan(tr, []);
+  } catch { return toast('No cameras\\tracks folder there. Pick Documents\\iRacing.', 1); }
+  toast(`Found ${tracks.size} saved tracks`);
+  render();
+};
+
+async function scan(dir, parts) {
+  for await (const [name, h] of dir.entries()) {
+    if (h.kind === 'file' && name.toLowerCase() === 'track.cam') tracks.set(parts.join('/') || '(top)', { fh: h, parts });
+    else if (h.kind === 'directory' && !name.startsWith('_')) await scan(h, [...parts, name]);
+  }
+}
+
+async function load(t) {
+  if (t.data || t.err) return t.data;
+  try {
+    const f = await t.fh.getFile();
+    t.data = C.parse(await f.arrayBuffer()); t.mtime = f.lastModified;
+  } catch (e) { t.err = e.message; }
+  return t.data;
+}
+
+$('#find').oninput = () => renderTracks();
+
+function render() { renderTracks(); renderGroups(); renderCam(); }
+
+function renderTracks() {
+  const q = $('#find').value.toLowerCase();
+  const list = [...tracks.keys()].sort().filter((p) => p.includes(q));
+  $('#tracks').replaceChildren(...list.map((p) => {
+    const t = tracks.get(p);
+    const r = el('div', { className: 'row' + (p === cur ? ' on' : '') + (t.err ? ' err' : ''), tabIndex: 0, title: t.err || p },
+      el('span', { className: 'name', textContent: p }));
+    if (t.dirty) r.append(el('span', { className: 'dot', title: 'Not saved' }));
+    r.onclick = r.onkeydown = async (e) => {
+      if (e.type === 'keydown' && e.key !== 'Enter') return;
+      cur = p; curGroup = curCam = null;
+      await load(t);
+      if (t.err) toast(`${p}: ${t.err}`, 1);
+      render();
+    };
+    return r;
+  }));
+  if (camsDir) $('#tracksNote').textContent = tracks.size ? 'Close iRacing before saving. It can rewrite these files when a track opens or closes.' : 'No saved tracks yet. Save one in the camera tool (Ctrl+F12) first.';
+}
+
+function renderGroups() {
+  const t = tracks.get(cur), d = t?.data;
+  $('#addFold').classList.toggle('dim', !d);
+  if (!d) { $('#groups').replaceChildren(); $('#groupsNote').hidden = false; return; }
+  $('#groupsNote').hidden = true;
+  $('#groups').replaceChildren(...d.groups.map((g) => {
+    const { name, cams } = C.groupGet(g);
+    const r = el('div', { className: 'row' + (name === curGroup ? ' on' : ''), tabIndex: 0 },
+      el('span', { className: 'name', textContent: name }), el('span', { className: 'count', textContent: cams.length }));
+    r.onclick = r.onkeydown = (e) => {
+      if (e.type === 'keydown' && e.key !== 'Enter') return;
+      curGroup = name; curCam = cams[0]; renderGroups(); renderCam();
+    };
+    return r;
+  }));
+}
+
+function numField(label, value, onSet, step = 0.5) {
+  const i = el('input', { type: 'number', step, value });
+  i.onchange = () => { const v = parseFloat(i.value); if (Number.isFinite(v)) onSet(v); else toast('Type a number', 1); };
+  return el('label', { className: 'field' }, el('span', { textContent: label }), i);
+}
+
+function renderCam() {
+  const box = $('#cam'), t = tracks.get(cur), d = t?.data;
+  const gi = d ? C.findGroup(d, curGroup) : -1;
+  if (gi < 0) return box.replaceChildren(el('p', { className: 'note', textContent: 'Pick a group.' }));
+  const g = C.groupGet(d.groups[gi]);
+  const kids = [el('div', { className: 'title', textContent: g.name })];
+
+  if (g.cams.length > 1) {
+    kids.push(el('div', { className: 'sub', textContent: `${g.cams.length} cameras` }));
+    const list = el('div', { className: 'list', style: 'max-height: 30vh; overflow: auto' });
+    for (const cn of g.cams) {
+      const r = el('div', { className: 'row' + (cn === curCam ? ' on' : ''), tabIndex: 0 }, el('span', { className: 'name', textContent: cn }));
+      r.onclick = () => { curCam = cn; renderCam(); };
+      list.append(r);
+    }
+    kids.push(list);
+  }
+
+  const ci = C.findCam(d, curCam);
+  if (ci < 0) kids.push(el('p', { className: 'note', textContent: `This group points at "${curCam}", which isn't in the file. iRacing skips it.` }));
+  else {
+    const rec = d.cams[ci], c = C.camGet(rec);
+    const set = (k) => (v) => { C.camSet(rec, { [k]: v }); touch(t); renderTracks(); };
+    if (g.cams.length > 1) kids.push(el('div', { className: 'sub', textContent: c.name }));
+    kids.push(
+      numField('X', +c.x.toFixed(3), set('x')),
+      numField('Y', +c.y.toFixed(3), set('y')),
+      numField('Z', +c.z.toFixed(3), set('z')),
+      numField('Yaw', deg(c.yaw), (v) => set('yaw')(rad(v)), 5),
+      numField('FOV', deg(c.fov), (v) => set('fov')(rad(v)), 1),
+    );
+    kids.push(el('p', { className: 'note', textContent: 'Metres. X minus is behind the car, Z is height. Yaw and FOV in degrees (FOV is a best guess at that field).' }));
+    if (c.type !== 3) kids.push(el('p', { className: 'note', textContent: 'Not a chase cam. For trackside cams, X/Y/Z are probably track positions.' }));
+  }
+
+  const apply = el('button', { className: 'btn', textContent: 'Copy to all tracks', title: 'Put this group, with its settings, on every saved track' });
+  apply.onclick = () => copyToAll(g.name);
+  kids.push(el('div', { className: 'btns' }, apply, confirmButton('Delete group', () => {
+    C.removeGroup(d, g.name); touch(t); curGroup = curCam = null; render();
+  })));
+  box.replaceChildren(...kids);
+}
+
+$('#add').onclick = () => {
+  const t = tracks.get(cur);
+  if (!t?.data) return;
+  const name = $('#nName').value.trim();
+  try {
+    C.addGroup(t.data, name, { x: +$('#nX').value, y: +$('#nY').value, z: +$('#nZ').value, yaw: rad(+$('#nYaw').value) });
+  } catch (e) { return toast(e.message, 1); }
+  touch(t); curGroup = name; curCam = 'Cam' + name; render();
+  toast(`Added ${name}. Save to write it.`);
+};
+
+async function copyToAll(name) {
+  const src = tracks.get(cur).data;
+  let n = 0;
+  for (const [p, t] of tracks) {
+    if (p === cur) continue;
+    if (!(await load(t))) continue;
+    C.copyGroup(src, t.data, name); touch(t); n++;
+  }
+  renderTracks();
+  toast(`Copied ${name} to ${n} tracks. Save to write them.`);
+}
+
+$('#save').onclick = async () => {
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  let ok = 0; const bad = [];
+  for (const [p, t] of tracks) {
+    if (!t.dirty) continue;
+    try {
+      const f = await t.fh.getFile();
+      if (f.lastModified !== t.mtime) throw new Error('changed on disk since it was opened (iRacing may have rewritten it). Reload the page to pick up the new version.');
+      // Backup of what's on disk now: cameras\_backup_web\<time>\tracks\<track>\track.cam
+      let dir = camsDir;
+      for (const part of ['_backup_web', stamp, 'tracks', ...t.parts]) dir = await dir.getDirectoryHandle(part, { create: true });
+      await writeFile(await dir.getFileHandle('track.cam', { create: true }), await f.arrayBuffer());
+      await writeFile(t.fh, C.serialize(t.data));
+      t.mtime = (await t.fh.getFile()).lastModified; t.dirty = false; ok++;
+    } catch (e) { bad.push(`${p}: ${e.message}`); }
+  }
+  $('#save').disabled = !dirty().length;
+  renderTracks();
+  if (bad.length) toast(`Saved ${ok}. Not saved: ${bad.join('; ')}`, 1);
+  else toast(`Saved ${ok} track${ok === 1 ? '' : 's'}. Backups are in cameras\\_backup_web\\${stamp}`);
+};
+
+async function writeFile(fh, data) {
+  const w = await fh.createWritable();
+  await w.write(data); await w.close();
+}
+</script>
+</body>
+</html>
